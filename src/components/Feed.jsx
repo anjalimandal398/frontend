@@ -2,7 +2,7 @@ import React from 'react'
 
 const Feed = () => {
   return (
-    <div>This si feed page</div>
+    <div>This is feed page</div>
   )
 }
 
