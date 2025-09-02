@@ -8,6 +8,7 @@ import { BASE_URL } from "../utils/constant";
 const Login = () => {
   const [emailId, setEmailId] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("")
   const Dispatch = useDispatch();
 
 
@@ -30,7 +31,7 @@ const Login = () => {
       return navigate("/")
 
     } catch (err) {
-      console.error(err);
+      setError(err?.response?.data || "Something went wrong")
     }
   };
 
@@ -72,6 +73,7 @@ const Login = () => {
             </div>
 
             {/* Actions */}
+            <p className="text-red-500">{error}</p>
             <div className="form-control mt-4">
               <button
                 type="submit"
