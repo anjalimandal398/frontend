@@ -29,7 +29,7 @@ const Navbar = () => {
   }
   
   return (
-    <div className="navbar bg-base-300 shadow-sm">
+    <div className="navbar bg-base-300 shadow-sm  fixed top-0 z-50 items-center p-4   ">
   <div className="flex-1">
     <Link to="/" className="btn btn-ghost text-xl">👨‍💻 DevTinder</Link>
   </div>
@@ -41,7 +41,7 @@ const Navbar = () => {
         <div className="w-10 rounded-full">
           <img
             alt="user photo"
-            src="https://images.unsplash.com/photo-1615233500570-c5d7576b4262?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8d29tZW5zfGVufDB8fDB8fHww" />
+            src={user.photoUrl} />
         </div>
       </div>
       <ul
