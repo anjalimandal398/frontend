@@ -1,12 +1,25 @@
 import axios from "axios";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { addRequests } from "../utils/requestSlice";
+import { addRequests, removeRequest } from "../utils/requestSlice";
 import { BASE_URL } from "../utils/constant";
 
 const Requests = () => {
+  const requests = useSelector((store) => store.requests);
   const dispatch = useDispatch();
-  const requests = useSelector((store) => store.requests); // ✅ store key matches
+
+  const reviewRequest = async (status, _id) => {
+    try {
+      const res = await axios.post(
+        BASE_URL + "/request/review/" + status + "/" + _id,
+        {},
+        { withCredentials: true }
+      );
+      dispatch(removeRequest(_id))
+    } catch (err) {
+      console.error("Error reviewing request:", err);
+    }
+  };
 
   // Fetch requests from API
   const fetchRequest = async () => {
@@ -14,7 +27,7 @@ const Requests = () => {
       const res = await axios.get(BASE_URL + "/user/requests/received", {
         withCredentials: true,
       });
-      dispatch(addRequests(res.data.data || [])); // fallback empty array
+      dispatch(addRequests(res.data.data || []));
     } catch (err) {
       console.error("Error fetching requests:", err);
     }
@@ -24,10 +37,8 @@ const Requests = () => {
     fetchRequest();
   }, []);
 
-  // Loading / null check
   if (!requests) return null;
 
-  // Empty state
   if (requests.length === 0)
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] text-gray-500">
@@ -37,11 +48,12 @@ const Requests = () => {
           className="w-32 h-32 mb-4 opacity-70"
         />
         <h1 className="text-2xl font-semibold">No Requests Found</h1>
-        <p className="text-sm">Start connecting with people to see them here.</p>
+        <p className="text-sm">
+          Start connecting with people to see them here.
+        </p>
       </div>
     );
 
-  // Requests list
   return (
     <div className="text-center my-10 px-4">
       <h1 className="text-4xl font-extrabold bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent mb-8">
@@ -49,11 +61,12 @@ const Requests = () => {
       </h1>
 
       <div className="flex flex-col items-center gap-6">
-        {requests.map((req) => {
-          const user = req.fromUserId;
-          if (!user) return null; // skip null entries
+        {requests.map((request) => {
+          const user = request.fromUserId;
+          if (!user) return null;
 
-          const { _id, firstName, lastName, photoUrl, age, gender, about } = user;
+          const { _id, firstName, lastName, photoUrl, age, gender, about } =
+            user;
 
           return (
             <div
@@ -80,19 +93,25 @@ const Requests = () => {
                 <p className="text-gray-600 dark:text-gray-300 mt-1">{about}</p>
               </div>
               <div>
-              <button className="btn btn-primary mx-2">Accept</button>
-              <button className="btn btn-secondary ">Reject</button>
+                <button
+                  className="btn btn-primary mx-2"
+                  onClick={() => reviewRequest("accepted", request._id)}
+                >
+                  Accept
+                </button>
+                <button
+                  className="btn btn-secondary "
+                  onClick={() => reviewRequest("rejected", request._id)}
+                >
+                  Reject
+                </button>
               </div>
-              
             </div>
-            
           );
         })}
-        
       </div>
     </div>
   );
 };
-
 
 export default Requests;
