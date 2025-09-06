@@ -1,31 +1,34 @@
-import React, { useEffect } from "react";
 import axios from "axios";
-import { BASE_URL } from "../utils/constant";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { addConnections } from "../utils/connectionSlice";
+import { addRequests } from "../utils/requestSlice";
+import { BASE_URL } from "../utils/constant";
 
-const Connections = () => {
-  const connections = useSelector((store) => store.connections);
+const Requests = () => {
   const dispatch = useDispatch();
+  const requests = useSelector((store) => store.requests); // ✅ store key matches
 
-  const fetchConnections = async () => {
+  // Fetch requests from API
+  const fetchRequest = async () => {
     try {
-      const res = await axios.get(BASE_URL + "/user/connections", {
+      const res = await axios.get(BASE_URL + "/user/requests/received", {
         withCredentials: true,
       });
-      dispatch(addConnections(res.data.data));
+      dispatch(addRequests(res.data.data || [])); // fallback empty array
     } catch (err) {
-      console.error("Error:", err.response?.data?.message || err.message);
+      console.error("Error fetching requests:", err);
     }
   };
 
   useEffect(() => {
-    fetchConnections();
+    fetchRequest();
   }, []);
 
-  if (!connections) return null;
+  // Loading / null check
+  if (!requests) return null;
 
-  if (connections.length === 0)
+  // Empty state
+  if (requests.length === 0)
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] text-gray-500">
         <img
@@ -33,23 +36,24 @@ const Connections = () => {
           alt="empty"
           className="w-32 h-32 mb-4 opacity-70"
         />
-        <h1 className="text-2xl font-semibold">No Connections Found</h1>
+        <h1 className="text-2xl font-semibold">No Requests Found</h1>
         <p className="text-sm">Start connecting with people to see them here.</p>
       </div>
     );
 
+  // Requests list
   return (
     <div className="text-center my-10 px-4">
-      {/* Heading */}
       <h1 className="text-4xl font-extrabold bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent mb-8">
-        Your Connections
+        Your Connection Requests
       </h1>
 
-      {/* Connections List */}
       <div className="flex flex-col items-center gap-6">
-        {connections.map((connection, index) => {
-          const {_id, firstName, lastName, photoUrl, age, gender, about } =
-            connection;
+        {requests.map((req) => {
+          const user = req.fromUserId;
+          if (!user) return null; // skip null entries
+
+          const { _id, firstName, lastName, photoUrl, age, gender, about } = user;
 
           return (
             <div
@@ -58,7 +62,7 @@ const Connections = () => {
             >
               {/* Profile Image */}
               <img
-                className="w-20 h-20 object-cover rounded-full border-3 border-pink-400"
+                className="w-20 h-20 object-cover rounded-full border-4 border-pink-400"
                 src={photoUrl}
                 alt="profile"
               />
@@ -75,12 +79,20 @@ const Connections = () => {
                 )}
                 <p className="text-gray-600 dark:text-gray-300 mt-1">{about}</p>
               </div>
+              <div>
+              <button className="btn btn-primary mx-2">Accept</button>
+              <button className="btn btn-secondary ">Reject</button>
+              </div>
+              
             </div>
+            
           );
         })}
+        
       </div>
     </div>
   );
 };
 
-export default Connections;
+
+export default Requests;
