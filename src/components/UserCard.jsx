@@ -1,58 +1,80 @@
+import React, { useRef } from "react";
+import TinderCard from "react-tinder-card";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { removeUserFromFeed } from "../utils/feedSlice";
 import { BASE_URL } from "../utils/constant";
 
 const UserCard = ({ user }) => {
-  if (!user) return null;
-  const { _id, firstName, lastName, photoUrl, age, gender, about } = user;
   const dispatch = useDispatch();
+  const cardRef = useRef(null);
 
-  const handleSendRequest = async (status, userId) => {
+  const sendRequest = async (status) => {
     try {
-      const res = await axios.post(
-        
-        BASE_URL + "/request/send/" + status + "/" + userId,
+      await axios.post(
+        BASE_URL + "/request/send/" + status + "/" + user._id,
         {},
         { withCredentials: true }
-        
       );
-      dispatch(removeUserFromFeed(userId));
     } catch (err) {
-      console.error("Error fetching requests:", err);
+      console.error("Error sending request:", err);
+    } finally {
+      dispatch(removeUserFromFeed(user._id));
     }
   };
 
+  const onSwipe = (direction) => {
+    if (direction === "right") sendRequest("interested");
+    if (direction === "left") sendRequest("ignored");
+  };
+
+
+  const swipe = async (dir) => {
+    await cardRef.current.swipe(dir); 
+  };
+
   return (
-    <div className="card bg-base-300 w-70 h-[420px] shadow-xl">
-      {" "}
-      <figure>
+    <TinderCard
+      ref={cardRef}
+      className="absolute w-[300px] max-w-sm"
+      onSwipe={onSwipe}
+      preventSwipe={["up", "down"]}
+    >
+      <div className="bg-base-300 mt-[20px] shadow-xl rounded-xl overflow-hidden">
         <img
-          src={photoUrl}
-          alt="user photo"
-          className="w-full h-70 object-cover object-center rounded-t-lg"
+          src={user.photoUrl}
+          alt="user"
+          className="w-full h-72 object-cover"
         />
-      </figure>
-      <div className="card-body p-4">
-        <h2 className="card-title text-base">{firstName + " " + lastName}</h2>
-        {age && gender && <p className="text-sm">{age + ", " + gender}</p>}
-        <p className="text-sm">{about}</p>
-        <div className="card-actions justify-center my-2">
-          <button
-            className="btn btn-primary btn-sm"
-            onClick={() => handleSendRequest("ignored", _id)}
-          >
-            Ignore
-          </button>
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => handleSendRequest("interested", _id)}
-          >
-            Interested
-          </button>
+        <div className="p-4">
+          <h2 className="font-bold text-lg">
+            {user.firstName} {user.lastName}
+          </h2>
+          {user.age && user.gender && (
+            <p className="text-sm text-gray-600">
+              {user.age}, {user.gender}
+            </p>
+          )}
+          <p className="text-sm">{user.about}</p>
+
+          {/* ✅ buttons with primary/secondary */}
+          <div className="flex justify-around mt-4">
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => swipe("left")}
+            >
+              Ignore
+            </button>
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={() => swipe("right")}
+            >
+              Interested
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </TinderCard>
   );
 };
 

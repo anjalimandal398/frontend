@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import UserCard from "./userCard";
+import UserCard from "./UserCard";
 import { useDispatch } from "react-redux";
 import { addUser } from "../utils/userSlice";
 import axios from "axios";
@@ -9,17 +9,17 @@ const EditProfile = ({ user }) => {
   const [firstName, setFirstName] = useState(user.firstName);
   const [lastName, setLastName] = useState(user.lastName);
   const [photoUrl, setPhotoUrl] = useState(user.photoUrl);
-  const [age, setAge] = useState(user.age);
-  const [gender, setGender] = useState(user.gender);
-  const [about, setAbout] = useState(user.about);
+  const [age, setAge] = useState(user.age || "");
+  const [gender, setGender] = useState(user.gender || "");
+  const [about, setAbout] = useState(user.about || "");
   const [error, setError] = useState("");
   const [showToast, setShowToast] = useState(false);
   const dispatch = useDispatch();
 
   const saveProfile = async (e) => {
+    e.preventDefault();
     setError("");
 
-    e.preventDefault(); // form reload na ho
     try {
       const res = await axios.patch(
         BASE_URL + "/profile/edit",
@@ -28,7 +28,7 @@ const EditProfile = ({ user }) => {
           lastName,
           photoUrl,
           age,
-          gender,
+          gender: gender.toLowerCase(), // ✅ lowercase fix
           about,
         },
         { withCredentials: true }
@@ -36,17 +36,15 @@ const EditProfile = ({ user }) => {
 
       dispatch(addUser(res?.data?.data));
       setShowToast(true);
-      setTimeout(() => {
-        setShowToast(false);
-      }, 3000);
+      setTimeout(() => setShowToast(false), 3000);
     } catch (err) {
-      setError(err.response.data);
+      setError(err.response?.data || "Something went wrong!");
     }
   };
 
   return (
     <>
-      <div className="flex flex-col md:flex-row justify-center items-start mb-10 mt-10 gap-6 ">
+      <div className="flex flex-col md:flex-row justify-center items-start mb-10 mt-10 gap-6">
         {/* Edit Form */}
         <div className="card bg-base-300 w-[350px] shadow-sm mb-[20px] mt-[-10px]">
           <div className="card-body p-4">
@@ -125,9 +123,9 @@ const EditProfile = ({ user }) => {
                   <option value="" disabled>
                     Select Gender
                   </option>
-                  <option value="Male">male</option>
-                  <option value="Female">female</option>
-                  <option value="Other">other</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
 
@@ -145,7 +143,7 @@ const EditProfile = ({ user }) => {
                 />
               </div>
 
-              {/* Actions */}
+              {/* Save Button */}
               <div className="form-control mt-3">
                 <button
                   type="submit"
@@ -156,12 +154,12 @@ const EditProfile = ({ user }) => {
               </div>
             </form>
 
-            {/* Error message */}
+            {/* Error Message */}
             {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
           </div>
         </div>
 
-        {/* UserCard */}
+        {/* UserCard Preview */}
         <div className="w-72">
           <UserCard
             user={{ firstName, lastName, photoUrl, age, gender, about }}
@@ -169,6 +167,7 @@ const EditProfile = ({ user }) => {
         </div>
       </div>
 
+      {/* Success Toast */}
       {showToast && (
         <div className="fixed top-2 left-1/2 -translate-x-1/2 z-50">
           <div className="alert alert-success shadow-lg">
